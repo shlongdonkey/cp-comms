@@ -71,8 +71,14 @@ export default function StoreOfficePage() {
             if (!res.ok) throw new Error();
             const data = await res.json();
 
-            // Update local state immediately
-            addTask(data);
+            // EXPLICIT SYNC: Ensure the assigned_to field is preserved in local state
+            const finalTask = {
+                ...data,
+                assigned_to: data.assigned_to || (input as any).assigned_to || (input as any).userId
+            };
+
+            // Update local state immediately with guaranteed driver assignment
+            addTask(finalTask);
 
             setIsCreateModalOpen(false);
             addToast({ type: 'success', message: 'Request created' });
@@ -132,21 +138,36 @@ export default function StoreOfficePage() {
         }
     };
 
-    // Grouping Logic - Strengthened for reliability
+    // Grouping Logic - Simplified and hardened for strict exclusivity
     const unallocated = tasks.filter(t => {
-        const isUnallocated = !t.assigned_to && t.state !== 'completed' && t.state !== 'rejected';
-        return isUnallocated;
+        // A task is unallocated if it has NO assigned driver AND is not completed/rejected
+        const driverId = t.assigned_to || (t as any).assignedTo || (t as any).userId || (t as any).driverId;
+        const isAssigned = !!driverId && driverId !== '';
+        const isFinished = t.state === 'completed' || t.state === 'rejected';
+        return !isAssigned && !isFinished;
     });
 
-    // Group based on driver role mapping - Stronger checks
+    // Grouping Logic - Fleet sections
     const crownAllocated = tasks.filter(t => {
-        if (!t.assigned_to || t.state === 'completed' || t.state === 'rejected') return false;
-        return t.assigned_to === '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b' || driverRoles[t.assigned_to] === 'driver_crown';
+        const driverId = t.assigned_to || (t as any).assignedTo || (t as any).userId || (t as any).driverId;
+        if (!driverId || t.state === 'completed' || t.state === 'rejected') return false;
+
+        // Exact match for Crown Fleet ID or its mapped role
+        const isCrownId = driverId === '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b';
+        const isCrownRole = driverRoles[driverId] === 'driver_crown';
+
+        return isCrownId || isCrownRole;
     });
 
     const electricAllocated = tasks.filter(t => {
-        if (!t.assigned_to || t.state === 'completed' || t.state === 'rejected') return false;
-        return t.assigned_to === 'fba7e904-0ed3-4a92-b637-9d64c91354ab' || driverRoles[t.assigned_to] === 'driver_electric';
+        const driverId = t.assigned_to || (t as any).assignedTo || (t as any).userId || (t as any).driverId;
+        if (!driverId || t.state === 'completed' || t.state === 'rejected') return false;
+
+        // Exact match for Electric Fleet ID or its mapped role
+        const isElectricId = driverId === 'fba7e904-0ed3-4a92-b637-9d64c91354ab';
+        const isElectricRole = driverRoles[driverId] === 'driver_electric';
+
+        return isElectricId || isElectricRole;
     });
 
     const rejectedTasks = tasks.filter(t => t.state === 'rejected');
@@ -187,7 +208,7 @@ export default function StoreOfficePage() {
     }
 
     const renderTaskSection = (title: string, taskList: Task[], icon: string, accentColor: string) => (
-        <section style={{ marginBottom: 'var(--space-md)' }}>
+        <section style={{ marginBottom: 'var(--space-xs)' }}>
             <div className="flex items-center gap-sm" style={{ marginBottom: 'var(--space-md)', color: accentColor }}>
                 <span style={{ fontSize: '1.25rem' }}>{icon}</span>
                 <h2 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -199,7 +220,17 @@ export default function StoreOfficePage() {
                     <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: 0 }}>No active tasks in this section</p>
                 </div>
             ) : (
-                <div className="flex flex-col gap-sm">
+                <div
+                    className="custom-scrollbar"
+                    style={{
+                        maxHeight: '520px', // Approx height of 3 tall cards + gaps
+                        overflowY: 'auto',
+                        paddingRight: 'var(--space-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'var(--space-sm)'
+                    }}
+                >
                     {taskList.map((task) => (
                         <TaskCard
                             key={task.id}
@@ -232,6 +263,22 @@ export default function StoreOfficePage() {
                     ))}
                 </div>
             )}
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+            `}</style>
         </section>
     );
 
@@ -292,11 +339,17 @@ export default function StoreOfficePage() {
                         <div className="flex justify-center p-2xl"><div className="spinner" /></div>
                     ) : (
                         <div className="flex flex-col gap-xl">
+                            {/* Top Section: Unallocated */}
                             <div className="glass-panel p-md">
                                 {renderTaskSection('Unallocated Requests', unallocated, '', 'var(--text-secondary)')}
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
+                            {/* Middle Section: Side-by-Side Fleets */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+                                gap: 'var(--space-xl)'
+                            }}>
                                 <div className="glass-panel p-md">
                                     {renderTaskSection('Crown Fleet', crownAllocated, '', 'var(--accent-green)')}
                                 </div>
@@ -305,9 +358,12 @@ export default function StoreOfficePage() {
                                 </div>
                             </div>
 
-                            <div className="glass-panel p-md">
-                                {renderTaskSection('Rejected Requests', rejectedTasks, '', 'var(--state-rejected)')}
-                            </div>
+                            {/* Bottom Section: Rejected (Hide when empty) */}
+                            {rejectedTasks.length > 0 && (
+                                <div className="glass-panel p-md">
+                                    {renderTaskSection('Rejected Requests', rejectedTasks, '', 'var(--state-rejected)')}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

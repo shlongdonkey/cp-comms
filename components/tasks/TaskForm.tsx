@@ -83,7 +83,8 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
                 urgency,
                 category,
                 assigned_to: assignedTo,
-            });
+                userId: assignedTo, // Pass redundantly for API compatibility
+            } as any);
 
             // Reset form on success
             setSignature('');

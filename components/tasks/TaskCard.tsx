@@ -207,13 +207,12 @@ export default function TaskCard({
             <div
                 className={`glass-panel task-card--${task.state.replace('_', '-')} ${isStale ? 'task-card--stale' : ''}`}
                 style={{
-                    padding: 'var(--space-md) var(--space-lg)',
-                    display: 'grid',
-                    gridTemplateColumns: '100px 1fr 200px 240px',
-                    alignItems: 'center',
-                    gap: 'var(--space-md)',
-                    minHeight: '80px',
-                    borderLeft: `8px solid ${isOverdue ? 'var(--state-rejected)' : (task.state === 'requested' ? 'var(--primary-blue-light)' : `var(--state-${task.state.replace('_', '-')})`)}`,
+                    padding: 'var(--space-md)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--space-sm)',
+                    minHeight: '130px',
+                    borderLeft: `6px solid ${isOverdue ? 'var(--state-rejected)' : (task.state === 'requested' ? 'var(--primary-blue-light)' : `var(--state-${task.state.replace('_', '-')})`)}`,
                     background: 'rgba(255, 255, 255, 0.03)',
                     position: 'relative',
                     overflow: 'hidden',
@@ -221,47 +220,59 @@ export default function TaskCard({
                     boxShadow: 'var(--shadow-sm)'
                 }}
             >
-                {/* Time Display */}
-                <div style={{ color: 'var(--text-muted)', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                    {creationTime}
-                </div>
-
-                {/* Description - The Main Content */}
-                <div style={{ fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.3 }}>
-                    {task.description}
-                </div>
-
-                {/* Metadata Block */}
-                <div className="flex items-center gap-lg" style={{ borderLeft: '1px solid var(--glass-border)', paddingLeft: 'var(--space-lg)', height: '40px' }}>
+                {/* Header Row: Time, Initials, Category, State */}
+                <div className="flex justify-between items-start" style={{ position: 'relative', zIndex: 1 }}>
                     <div className="flex flex-col">
-                        <span style={{ fontWeight: 800, color: 'var(--primary-blue-light)', fontSize: '1.1rem', lineHeight: 1 }}>{formatInitials(task.signature)}</span>
-                        <div className="flex gap-xs" style={{ marginTop: '4px' }}>
-                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{task.urgency.toUpperCase()}</span>
-                            <span style={{ fontSize: '0.65rem', color: 'var(--accent-green)', fontWeight: 600 }}>{task.category?.toUpperCase() || 'TASK'}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 700 }}>
+                            {creationTime}
+                        </span>
+                        <div className="flex items-center gap-xs" style={{ marginTop: '2px' }}>
+                            <span style={{ fontWeight: 800, color: 'var(--primary-blue-light)', fontSize: '0.95rem' }}>{formatInitials(task.signature)}</span>
+                            <span style={{ fontSize: '0.6rem', color: 'var(--accent-green)', fontWeight: 700, background: 'rgba(179, 226, 109, 0.1)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(179, 226, 109, 0.2)' }}>
+                                {task.category?.toUpperCase() || 'TASK'}
+                            </span>
                         </div>
                     </div>
+
                     <div className="flex flex-col items-end">
                         <span style={{
-                            fontSize: '0.7rem',
+                            fontSize: '0.65rem',
                             fontWeight: 700,
                             padding: '2px 8px',
                             borderRadius: '4px',
-                            background: isOverdue ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255,255,255,0.05)',
-                            color: isOverdue ? 'var(--state-rejected)' : 'var(--text-secondary)'
+                            background: isOverdue ? 'rgba(255, 77, 77, 0.2)' : 'rgba(255,255,255,0.05)',
+                            color: isOverdue ? 'var(--state-rejected)' : (task.state === 'requested' ? 'var(--primary-blue-light)' : 'var(--text-secondary)'),
+                            border: `1px solid ${isOverdue ? 'rgba(255, 77, 77, 0.3)' : 'var(--glass-border)'}`
                         }}>
                             {STATE_LABELS[task.state]}
                         </span>
-                        {isOverdue && (
-                            <span style={{ fontSize: '0.6rem', color: 'var(--state-rejected)', fontWeight: 800, marginTop: '2px' }}>OVERDUE</span>
-                        )}
+                        <div className="flex gap-xs mt-xs">
+                            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{task.urgency.toUpperCase()}</span>
+                            {isOverdue && <span style={{ fontSize: '0.6rem', color: 'var(--state-rejected)', fontWeight: 800 }}>OVERDUE</span>}
+                        </div>
                     </div>
                 </div>
 
-                {/* Actions Block */}
-                <div className="flex justify-end gap-sm" style={{ position: 'relative', zIndex: 2 }}>
+                {/* Description - The Main Content (Wrapping) */}
+                <div style={{
+                    fontSize: '1rem',
+                    color: 'var(--text-primary)',
+                    fontWeight: 500,
+                    lineHeight: 1.4,
+                    flex: 1,
+                    position: 'relative',
+                    zIndex: 1,
+                    wordBreak: 'break-word',
+                    padding: 'var(--space-xs) 0'
+                }}>
+                    {task.description}
+                </div>
+
+                {/* Footer Row: Actions */}
+                <div className="flex justify-end gap-sm" style={{ marginTop: 'auto', paddingTop: 'var(--space-xs)', position: 'relative', zIndex: 2 }}>
                     {renderActions()}
                     {task.state === 'rejected' && (
-                        <button className="info-btn" onClick={() => onInfoClick?.(task)}>i</button>
+                        <button className="info-btn" onClick={() => onInfoClick?.(task)} style={{ scale: '0.9' }}>i</button>
                     )}
                 </div>
 
@@ -273,7 +284,7 @@ export default function TaskCard({
                         right: 0,
                         top: 0,
                         bottom: 0,
-                        background: 'linear-gradient(90deg, rgba(179, 226, 109, 0.03) 0%, transparent 100%)',
+                        background: 'linear-gradient(180deg, rgba(179, 226, 109, 0.03) 0%, transparent 100%)',
                         zIndex: 0,
                         pointerEvents: 'none'
                     }} />

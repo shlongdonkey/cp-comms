@@ -84,7 +84,9 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
     try {
-        const { signature, description, urgency, category, assigned_to } = req.body;
+        // EXTREME REDUNDANT EXTRACTION for driver assignment
+        const { signature, description, urgency, category, assigned_to, assignedTo, userId, driverId } = req.body;
+        const targetDriver = assigned_to || assignedTo || userId || driverId || null;
 
         // Validate signature (2 letters)
         const cleanSignature = signature.replace(/[.\s]/g, '');
@@ -112,7 +114,7 @@ router.post('/', async (req, res) => {
         const task = {
             id: uuidv4(),
             created_by: req.user.userId,
-            assigned_to: assigned_to || null,
+            assigned_to: targetDriver || null,
             state: 'requested',
             category,
             urgency,
