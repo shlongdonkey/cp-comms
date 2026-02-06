@@ -1,5 +1,6 @@
 // Task states and priorities
 export type TaskState = 'requested' | 'in_progress' | 'paused' | 'completed' | 'rejected';
+export type TaskCategory = 'product' | 'pallets' | 'carton' | 'material' | 'label' | 'task';
 export type Urgency = 'now' | '15min' | '1hour' | 'today';
 export type UserRole = 'office' | 'factory_office' | 'store_office' | 'factory' | 'driver_crown' | 'driver_electric';
 export type Channel = 'global_chat' | 'admin_ops';
@@ -30,6 +31,7 @@ export interface Task {
     state_changed_at: string;
     signature: string;
     description: string;
+    category: TaskCategory;
     rejection_reason: string | null;
     rejection_expires: string | null;
 }
@@ -60,6 +62,8 @@ export interface CreateTaskInput {
     signature: string;
     description: string;
     urgency: Urgency;
+    category: TaskCategory;
+    assigned_to?: string | null;
 }
 
 export interface CreateMessageInput {

@@ -84,7 +84,7 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
     try {
-        const { signature, description, urgency } = req.body;
+        const { signature, description, urgency, category, assigned_to } = req.body;
 
         // Validate signature (2 letters)
         const cleanSignature = signature.replace(/[.\s]/g, '');
@@ -97,6 +97,12 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Invalid urgency value' });
         }
 
+        // Validate category
+        const validCategories = ['product', 'pallets', 'carton', 'material', 'label', 'task'];
+        if (!category || !validCategories.includes(category)) {
+            return res.status(400).json({ error: 'Invalid or missing category' });
+        }
+
         // Validate description
         if (!description || description.trim().length === 0) {
             return res.status(400).json({ error: 'Description required' });
@@ -106,8 +112,9 @@ router.post('/', async (req, res) => {
         const task = {
             id: uuidv4(),
             created_by: req.user.userId,
-            assigned_to: null,
+            assigned_to: assigned_to || null,
             state: 'requested',
+            category,
             urgency,
             created_at: now,
             deadline: calculateDeadline(now, urgency),

@@ -293,20 +293,20 @@ export default function StoreOfficePage() {
                     ) : (
                         <div className="flex flex-col gap-xl">
                             <div className="glass-panel p-md">
-                                {renderTaskSection('Unallocated Requests', unallocated, '📋', 'var(--text-secondary)')}
+                                {renderTaskSection('Unallocated Requests', unallocated, '', 'var(--text-secondary)')}
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
                                 <div className="glass-panel p-md">
-                                    {renderTaskSection('Crown Fleet', crownAllocated, '🚜', 'var(--accent-green)')}
+                                    {renderTaskSection('Crown Fleet', crownAllocated, '', 'var(--accent-green)')}
                                 </div>
                                 <div className="glass-panel p-md">
-                                    {renderTaskSection('Electric Fleet', electricAllocated, '⚡', 'var(--primary-blue-light)')}
+                                    {renderTaskSection('Electric Fleet', electricAllocated, '', 'var(--primary-blue-light)')}
                                 </div>
                             </div>
 
                             <div className="glass-panel p-md">
-                                {renderTaskSection('Rejected Requests', rejectedTasks, '🚫', 'var(--state-rejected)')}
+                                {renderTaskSection('Rejected Requests', rejectedTasks, '', 'var(--state-rejected)')}
                             </div>
                         </div>
                     )}

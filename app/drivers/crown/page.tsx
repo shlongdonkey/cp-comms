@@ -138,7 +138,7 @@ export default function CrownDriverPage() {
                         }}
                     >
                         <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white' }}>
-                            👑
+                            Crown
                         </span>
                         <span style={{ color: 'white', fontWeight: 600 }}>
                             Crown Driver
@@ -184,7 +184,7 @@ export default function CrownDriverPage() {
                         }}
                     >
                         <h2 style={{ color: '#8B4513', marginBottom: 'var(--space-sm)' }}>
-                            👑 Crown Deliveries
+                            Crown Deliveries
                         </h2>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                             View and manage your assigned delivery tasks

@@ -76,7 +76,7 @@ export default function TaskCard({
                     disabled={loading || !!actionBusy}
                     style={{ background: '#FBBF24', color: '#000', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', minWidth: '95px' }}
                 >
-                    {actionBusy === 'crown' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: '#000' }} /> : '👑 Crown'}
+                    {actionBusy === 'crown' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: '#000' }} /> : 'Crown'}
                 </button>
             );
             actions.push(
@@ -92,7 +92,7 @@ export default function TaskCard({
                     disabled={loading || !!actionBusy}
                     style={{ background: '#10B981', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', minWidth: '95px' }}
                 >
-                    {actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: '#fff' }} /> : '⚡ Electric'}
+                    {actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: '#fff' }} /> : 'Electric'}
                 </button>
             );
             actions.push(
@@ -137,7 +137,7 @@ export default function TaskCard({
                         minWidth: '120px'
                     }}
                 >
-                    {actionBusy === 'crown' || actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: isCrown ? '#fff' : '#000' }} /> : `🔄 Swap to ${isCrown ? 'Electric' : 'Crown'}`}
+                    {actionBusy === 'crown' || actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: isCrown ? '#fff' : '#000' }} /> : `Swap to ${isCrown ? 'Electric' : 'Crown'}`}
                 </button>
             );
             actions.push(
@@ -235,7 +235,10 @@ export default function TaskCard({
                 <div className="flex items-center gap-lg" style={{ borderLeft: '1px solid var(--glass-border)', paddingLeft: 'var(--space-lg)', height: '40px' }}>
                     <div className="flex flex-col">
                         <span style={{ fontWeight: 800, color: 'var(--primary-blue-light)', fontSize: '1.1rem', lineHeight: 1 }}>{formatInitials(task.signature)}</span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>{task.urgency.toUpperCase()}</span>
+                        <div className="flex gap-xs" style={{ marginTop: '4px' }}>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{task.urgency.toUpperCase()}</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--accent-green)', fontWeight: 600 }}>{task.category?.toUpperCase() || 'TASK'}</span>
+                        </div>
                     </div>
                     <div className="flex flex-col items-end">
                         <span style={{
@@ -303,7 +306,7 @@ export default function TaskCard({
                         {formatInitials(task.signature)}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {creationTime}
+                        {creationTime} • <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>{task.category?.toUpperCase() || 'TASK'}</span>
                     </span>
                 </div>
 
@@ -322,7 +325,7 @@ export default function TaskCard({
 
             {/* Footer */}
             <div className="flex justify-between items-center mt-auto" style={{ zIndex: 1, position: 'relative' }}>
-                <span className="text-xs" style={{ opacity: 0.5 }}>{task.urgency === 'now' ? '⚡ Now' : '🕐 ' + task.urgency}</span>
+                <span className="text-xs" style={{ opacity: 0.5 }}>{task.urgency === 'now' ? 'Now' : task.urgency}</span>
                 {task.state === 'rejected' && <button className="info-btn" onClick={() => onInfoClick?.(task)}>i</button>}
             </div>
         </div>

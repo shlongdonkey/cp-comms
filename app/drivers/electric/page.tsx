@@ -95,7 +95,7 @@ export default function ElectricDriverPage() {
             addToast({
                 type: 'success',
                 message: action === 'complete'
-                    ? 'Delivery completed! ⚡'
+                    ? 'Delivery completed!'
                     : `Task ${action}ed`,
             });
         } catch (error) {
@@ -138,7 +138,7 @@ export default function ElectricDriverPage() {
                         }}
                     >
                         <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white' }}>
-                            ⚡
+                            Electric
                         </span>
                         <span style={{ color: 'white', fontWeight: 600 }}>
                             Electric Driver
@@ -184,7 +184,7 @@ export default function ElectricDriverPage() {
                         }}
                     >
                         <h2 style={{ color: '#00C853', marginBottom: 'var(--space-sm)' }}>
-                            ⚡ Electric Fleet
+                            Electric Fleet
                         </h2>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                             Eco-friendly deliveries • Zero emissions
