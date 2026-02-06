@@ -205,7 +205,7 @@ export default function FactoryPage() {
                                     color: 'var(--text-muted)',
                                 }}
                             >
-                                ({tasks.length})
+                                ({tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').length})
                             </span>
                         </h2>
 
@@ -216,7 +216,7 @@ export default function FactoryPage() {
                                     Loading tasks...
                                 </p>
                             </div>
-                        ) : tasks.length === 0 ? (
+                        ) : tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').length === 0 ? (
                             <div
                                 className="card text-center"
                                 style={{ padding: 'var(--space-2xl)', color: 'var(--text-muted)' }}
@@ -227,8 +227,8 @@ export default function FactoryPage() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-md">
-                                {tasks.map((task) => (
+                            <div className="flex flex-col gap-md mb-xl">
+                                {tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').map((task) => (
                                     <TaskCard
                                         key={task.id}
                                         task={task}
@@ -239,6 +239,36 @@ export default function FactoryPage() {
                                         onReject={(id) => handleTaskAction(id, 'reject')}
                                         onInfoClick={openRejectionModal}
                                         loading={actionLoading === task.id}
+                                        viewMode="factory"
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        <h2 style={{ marginBottom: 'var(--space-md)', color: 'var(--state-rejected)' }}>
+                            Rejected Requests
+                            <span
+                                style={{
+                                    marginLeft: 'var(--space-sm)',
+                                    fontSize: '0.875rem',
+                                    color: 'var(--text-muted)',
+                                }}
+                            >
+                                ({tasks.filter(t => t.state === 'rejected').length})
+                            </span>
+                        </h2>
+
+                        {!loading && tasks.filter(t => t.state === 'rejected').length === 0 ? (
+                            <div className="card text-center p-xl" style={{ borderStyle: 'dotted', opacity: 0.6 }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No recently rejected tasks</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-md">
+                                {tasks.filter(t => t.state === 'rejected').map((task) => (
+                                    <TaskCard
+                                        key={task.id}
+                                        task={task}
+                                        onInfoClick={() => openRejectionModal(task)}
                                         viewMode="factory"
                                     />
                                 ))}
@@ -256,7 +286,7 @@ export default function FactoryPage() {
 
                 {/* Toast Notifications */}
                 <ToastContainer />
-            </div>
-        </RouteGuard>
+            </div >
+        </RouteGuard >
     );
 }

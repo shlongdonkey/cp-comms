@@ -28,7 +28,7 @@
   --state-paused: #FBBF24;
   --state-completed: #10B981;
   --state-rejected: #FF4D4D;
-  --stale-pulse: #EF4444;
+  --state-paused: #FBBF24;
 
   /* Typography */
   --text-primary: #F8FAFC;
@@ -59,6 +59,8 @@
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
 
   /* Transitions */
   --trans-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -99,6 +101,131 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+/* Layout Utilities */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-xs {
+  gap: var(--space-xs);
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+.z-100 {
+  z-index: 100;
+}
+
+.p-md {
+  padding: var(--space-md);
+}
+
+.p-lg {
+  padding: var(--space-lg);
+}
+
+.mb-lg {
+  margin-bottom: var(--space-lg);
+}
+
+.mb-xl {
+  margin-bottom: var(--space-xl);
+}
+
+.p-xl {
+  padding: var(--space-xl);
+}
+
+.p-2xl {
+  padding: var(--space-2xl);
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
 }
 
 .glass-panel:hover {
@@ -167,6 +294,30 @@ body {
 .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
+}
+
+.info-btn {
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid var(--state-rejected);
+  color: var(--state-rejected);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.info-btn:hover {
+  background: var(--state-rejected);
+  color: white;
+  transform: scale(1.1);
 }
 
 /* Task Card States */

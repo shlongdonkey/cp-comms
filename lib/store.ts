@@ -106,12 +106,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
     addTask: (task) => {
         const { tasks } = get();
+        if (tasks.some(t => t.id === task.id)) return;
         set({ tasks: sortTasks([...tasks, task]) });
     },
 
     updateTask: (task) => {
         const { tasks } = get();
-        const updated = tasks.map(t => t.id === task.id ? task : t);
+        const exists = tasks.some(t => t.id === task.id);
+        const updated = exists
+            ? tasks.map(t => t.id === task.id ? task : t)
+            : [...tasks, task];
         set({ tasks: sortTasks(updated) });
     },
 

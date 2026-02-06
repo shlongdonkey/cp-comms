@@ -133,12 +133,12 @@ export default function OfficePage() {
                         <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-md)' }}>Active Requests</h2>
                         {loading ? (
                             <div className="flex justify-center p-2xl"><div className="spinner" /></div>
-                        ) : tasks.length === 0 ? (
+                        ) : tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').length === 0 ? (
                             <div className="card text-center p-2xl" style={{ borderStyle: 'dashed' }}>
                                 <p style={{ color: 'var(--text-muted)' }}>No active requests</p>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-md">
+                            <div className="flex flex-col gap-md mb-xl">
                                 {tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').map((task) => (
                                     <TaskCard
                                         key={task.id}
@@ -154,13 +154,30 @@ export default function OfficePage() {
                                 ))}
                             </div>
                         )}
+
+                        <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-md)', color: 'var(--state-rejected)' }}>Rejected Requests</h2>
+                        {!loading && tasks.filter(t => t.state === 'rejected').length === 0 ? (
+                            <div className="card text-center p-xl" style={{ borderStyle: 'dashed', opacity: 0.6 }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No rejected requests</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-md">
+                                {tasks.filter(t => t.state === 'rejected').map((task) => (
+                                    <TaskCard
+                                        key={task.id}
+                                        task={task}
+                                        onInfoClick={() => openRejectionModal(task)}
+                                        viewMode="office"
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </section>
                 </div>
                 <RejectionModal
+                    task={selectedTaskForRejection}
                     isOpen={isRejectionModalOpen}
                     onClose={closeRejectionModal}
-                    onConfirm={(reason) => selectedTaskForRejection && handleReject(selectedTaskForRejection.id, reason)}
-                    loading={!!actionLoading}
                 />
                 <ToastContainer />
             </main>

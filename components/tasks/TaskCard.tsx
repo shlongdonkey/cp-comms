@@ -59,7 +59,7 @@ export default function TaskCard({
     const isOverdue = deadlineDate < new Date() && task.state !== 'completed';
 
     const renderActions = () => {
-        const actions = [];
+        const actions: JSX.Element[] = [];
 
         // Special actions for Office Unallocated
         if (viewMode === 'office' && !task.assigned_to && task.state === 'requested') {
@@ -114,13 +114,64 @@ export default function TaskCard({
             return actions;
         }
 
+        // Actions for Office - Already Assigned but still Requested
+        if (viewMode === 'office' && task.assigned_to && task.state === 'requested') {
+            const isCrown = task.assigned_to === '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b';
+            actions.push(
+                <button
+                    key="swap"
+                    type="button"
+                    className="btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (isCrown) onAssignElectric?.(task.id);
+                        else onAssignCrown?.(task.id);
+                    }}
+                    disabled={loading || !!actionBusy}
+                    style={{
+                        background: isCrown ? '#10B981' : '#FBBF24',
+                        color: isCrown ? '#fff' : '#000',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        minWidth: '120px'
+                    }}
+                >
+                    {actionBusy === 'crown' || actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: isCrown ? '#fff' : '#000' }} /> : `🔄 Swap to ${isCrown ? 'Electric' : 'Crown'}`}
+                </button>
+            );
+            actions.push(
+                <button
+                    key="reject"
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onReject?.(task.id);
+                    }}
+                    disabled={loading || !!actionBusy}
+                    style={{ border: '1px solid var(--state-rejected)', color: 'var(--state-rejected)', fontSize: '0.85rem', cursor: 'pointer' }}
+                >
+                    {actionBusy === 'reject' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: 'var(--state-rejected)' }} /> : 'Reject'}
+                </button>
+            );
+            return actions;
+        }
+
+        // Only show state change buttons (Start, Pause, Resume, Complete) if NOT in office mode
+        if (viewMode === 'office') {
+            // Office can ONLY see Info or Re-assign/Reject for unstarted tasks. 
+            // Once started, they just watch.
+            return actions;
+        }
+
         if (task.state === 'requested') {
             actions.push(
                 <button key="start" className="btn btn-success" onClick={() => onStart?.(task.id)} disabled={loading || !!actionBusy}>
                     {actionBusy === 'start' ? <span className="spinner" /> : 'Start'}
                 </button>
             );
-            if (viewMode === 'factory' || viewMode === 'office') {
+            if (viewMode === 'factory') {
                 actions.push(
                     <button key="reject" className="btn btn-ghost" onClick={() => onReject?.(task.id)} disabled={loading} style={{ border: '1px solid var(--state-rejected)', color: 'var(--state-rejected)' }}>
                         Reject

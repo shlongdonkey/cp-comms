@@ -18,6 +18,7 @@ export default function StoreOfficePage() {
     // UI State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
     const [driverRoles, setDriverRoles] = useState<Record<string, string>>({
         '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b': 'driver_crown',
         'fba7e904-0ed3-4a92-b637-9d64c91354ab': 'driver_electric'
@@ -68,6 +69,11 @@ export default function StoreOfficePage() {
                 body: JSON.stringify(input),
             });
             if (!res.ok) throw new Error();
+            const data = await res.json();
+
+            // Update local state immediately
+            addTask(data);
+
             setIsCreateModalOpen(false);
             addToast({ type: 'success', message: 'Request created' });
         } catch {
@@ -92,6 +98,9 @@ export default function StoreOfficePage() {
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || `Failed to ${action} task`);
+
+            // Update local state immediately
+            updateTask(data);
         } catch (error: any) {
             addToast({ type: 'error', message: error.message });
         } finally {
@@ -109,6 +118,11 @@ export default function StoreOfficePage() {
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || 'Failed to reject task');
+
+            // Update local state immediately for better UX
+            updateTask(data);
+
+            setRejectionReason(''); // Clear rejection reason after successful rejection
             closeRejectionModal();
             addToast({ type: 'success', message: 'Task rejected' });
         } catch (error: any) {
@@ -135,6 +149,8 @@ export default function StoreOfficePage() {
         return t.assigned_to === 'fba7e904-0ed3-4a92-b637-9d64c91354ab' || driverRoles[t.assigned_to] === 'driver_electric';
     });
 
+    const rejectedTasks = tasks.filter(t => t.state === 'rejected');
+
     const handleAssign = async (taskId: string, userId: string) => {
         const action = userId === '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b' ? 'crown' : 'electric';
         console.log(`[STORE-OFFICE] Assigning task ${taskId} to ${fleetName(userId)}...`);
@@ -152,10 +168,10 @@ export default function StoreOfficePage() {
                 throw new Error(data.error || 'Failed to allocate task');
             }
 
-            console.log('[STORE-OFFICE] Assign successful:', data);
-
-            // Manual Forced Update to Store
+            // Update local state immediately
             updateTask(data);
+
+            console.log('[STORE-OFFICE] Assign successful:', data);
 
             addToast({ type: 'success', message: `Task allocated to ${fleetName(userId)} fleet` });
         } catch (error: any) {
@@ -288,6 +304,10 @@ export default function StoreOfficePage() {
                                     {renderTaskSection('Electric Fleet', electricAllocated, '⚡', 'var(--primary-blue-light)')}
                                 </div>
                             </div>
+
+                            <div className="glass-panel p-md">
+                                {renderTaskSection('Rejected Requests', rejectedTasks, '🚫', 'var(--state-rejected)')}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -327,28 +347,38 @@ export default function StoreOfficePage() {
 
             {/* Reject Input Modal */}
             {isRejectionModalOpen && selectedTaskForRejection && selectedTaskForRejection.state !== 'rejected' && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-md" style={{ background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(12px)' }}>
-                    <div className="glass-panel w-full" style={{ maxWidth: '450px', padding: 'var(--space-lg)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}>
+                <div className="modal-overlay">
+                    <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', padding: 'var(--space-lg)', boxShadow: '0 25px 60px rgba(0,0,0,0.6)', position: 'relative' }}>
                         <h3 style={{ color: 'var(--state-rejected)', fontSize: '1.5rem', fontWeight: 700, marginBottom: 'var(--space-md)' }}>Reject Request</h3>
                         <p className="text-sm mb-lg" style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                             Please provide a detailed reason for rejecting this request from <strong>{formatInitials(selectedTaskForRejection.signature)}</strong>. This will be visible to the floor staff.
                         </p>
                         <textarea
                             id="rejection-reason"
-                            className="input w-full mb-lg"
+                            className="input w-full"
                             rows={4}
                             style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white' }}
                             placeholder="e.g., Load exceeds fork capacity, Floor area obstructed..."
+                            maxLength={150}
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
                         />
+                        <div className="flex justify-end mb-lg mt-xs">
+                            <span style={{ fontSize: '0.75rem', color: rejectionReason.length >= 150 ? 'var(--state-rejected)' : 'var(--text-muted)' }}>
+                                {rejectionReason.length}/150 characters
+                            </span>
+                        </div>
                         <div className="flex gap-md">
-                            <button className="btn btn-ghost flex-1" onClick={closeRejectionModal}>Cancel</button>
+                            <button className="btn btn-ghost flex-1" onClick={() => {
+                                setRejectionReason('');
+                                closeRejectionModal();
+                            }}>Cancel</button>
                             <button
                                 className="btn btn-primary flex-1"
                                 style={{ background: 'var(--state-rejected)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                disabled={!!actionLoading}
+                                disabled={!!actionLoading || !rejectionReason.trim()}
                                 onClick={() => {
-                                    const reason = (document.getElementById('rejection-reason') as HTMLTextAreaElement).value;
-                                    if (reason.trim()) handleReject(selectedTaskForRejection.id, reason);
+                                    if (rejectionReason.trim()) handleReject(selectedTaskForRejection.id, rejectionReason);
                                 }}
                             >
                                 {actionLoading === `${selectedTaskForRejection.id}:reject` ? <div className="spinner" style={{ width: '16px', height: '16px', borderColor: 'white' }} /> : 'Submit Rejection'}

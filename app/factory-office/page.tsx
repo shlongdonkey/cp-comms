@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import RouteGuard from '@/components/auth/RouteGuard';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskForm from '@/components/tasks/TaskForm';
+import RejectionModal from '@/components/tasks/RejectionModal';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useTaskStore, useUIStore, useAuthStore } from '@/lib/store';
 import { connectSocket, subscribeToTasks } from '@/lib/socket';
@@ -12,7 +13,7 @@ import type { Task, CreateTaskInput } from '@/lib/types';
 export default function FactoryOfficePage() {
     const { user } = useAuthStore();
     const { tasks, setTasks, addTask, updateTask, removeTask, loading, setLoading } = useTaskStore();
-    const { addToast } = useUIStore();
+    const { addToast, isRejectionModalOpen, selectedTaskForRejection, openRejectionModal, closeRejectionModal } = useUIStore();
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     // Fetch initial tasks
@@ -114,12 +115,12 @@ export default function FactoryOfficePage() {
                         <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-md)' }}>Active Requests</h2>
                         {loading ? (
                             <div className="flex justify-center p-2xl"><div className="spinner" /></div>
-                        ) : tasks.length === 0 ? (
+                        ) : tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').length === 0 ? (
                             <div className="card text-center p-2xl" style={{ borderStyle: 'dashed' }}>
                                 <p style={{ color: 'var(--text-muted)' }}>No active requests</p>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-md">
+                            <div className="flex flex-col gap-md mb-xl">
                                 {tasks.filter(t => t.state !== 'completed' && t.state !== 'rejected').map((task) => (
                                     <TaskCard
                                         key={task.id}
@@ -129,6 +130,25 @@ export default function FactoryOfficePage() {
                                         onPause={() => handleTaskAction(task.id, 'pause')}
                                         onResume={() => handleTaskAction(task.id, 'resume')}
                                         onComplete={() => handleTaskAction(task.id, 'complete')}
+                                        onInfoClick={() => task.state === 'rejected' && openRejectionModal(task)}
+                                        viewMode="office"
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--space-md)', color: 'var(--state-rejected)' }}>Rejected Requests</h2>
+                        {!loading && tasks.filter(t => t.state === 'rejected').length === 0 ? (
+                            <div className="card text-center p-xl" style={{ borderStyle: 'dashed', opacity: 0.6 }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No rejected requests</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-md">
+                                {tasks.filter(t => t.state === 'rejected').map((task) => (
+                                    <TaskCard
+                                        key={task.id}
+                                        task={task}
+                                        onInfoClick={() => openRejectionModal(task)}
                                         viewMode="office"
                                     />
                                 ))}
@@ -136,6 +156,11 @@ export default function FactoryOfficePage() {
                         )}
                     </section>
                 </div>
+                <RejectionModal
+                    task={selectedTaskForRejection}
+                    isOpen={isRejectionModalOpen}
+                    onClose={closeRejectionModal}
+                />
                 <ToastContainer />
             </main>
         </RouteGuard>
