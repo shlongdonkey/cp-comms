@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    const token = request.cookies.get('session')?.value;
+    const token = request.cookies.get('cp-comms-session')?.value;
 
     // For protected routes, require auth
     if (protectedEntry) {
@@ -60,7 +60,6 @@ export async function middleware(request: NextRequest) {
 
             if (!allowedRoles.includes(userRole)) {
                 // User trying to access route they don't have permission for
-                // Redirect to home - prevents URL manipulation
                 return NextResponse.redirect(new URL('/', request.url));
             }
 
@@ -74,7 +73,6 @@ export async function middleware(request: NextRequest) {
     }
 
     // For direct access routes, just allow through
-    // These are accessed from dedicated terminals
     return NextResponse.next();
 }
 

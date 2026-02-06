@@ -5,11 +5,12 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 export async function GET(request: NextRequest) {
     try {
-        const sessionCookie = cookies().get('session');
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('cp-comms-session');
 
         const res = await fetch(`${BACKEND_URL}/api/tasks`, {
             headers: {
-                Cookie: sessionCookie ? `session=${sessionCookie.value}` : '',
+                Cookie: sessionCookie ? `cp-comms-session=${sessionCookie.value}` : '',
             },
         });
 
@@ -26,14 +27,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const sessionCookie = cookies().get('session');
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('cp-comms-session');
         const body = await request.json();
 
         const res = await fetch(`${BACKEND_URL}/api/tasks`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Cookie: sessionCookie ? `session=${sessionCookie.value}` : '',
+                Cookie: sessionCookie ? `cp-comms-session=${sessionCookie.value}` : '',
             },
             body: JSON.stringify(body),
         });

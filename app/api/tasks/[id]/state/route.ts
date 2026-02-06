@@ -8,14 +8,15 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const sessionCookie = cookies().get('session');
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('cp-comms-session');
         const body = await request.json();
 
         const res = await fetch(`${BACKEND_URL}/api/tasks/${params.id}/state`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
-                Cookie: sessionCookie ? `session=${sessionCookie.value}` : '',
+                Cookie: sessionCookie ? `cp-comms-session=${sessionCookie.value}` : '',
             },
             body: JSON.stringify(body),
         });

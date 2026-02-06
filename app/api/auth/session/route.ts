@@ -5,11 +5,12 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 export async function GET(request: NextRequest) {
     try {
-        const sessionCookie = cookies().get('session');
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('cp-comms-session');
 
         const res = await fetch(`${BACKEND_URL}/api/auth/session`, {
             headers: {
-                Cookie: sessionCookie ? `session=${sessionCookie.value}` : '',
+                Cookie: sessionCookie ? `cp-comms-session=${sessionCookie.value}` : '',
             },
         });
 

@@ -53,7 +53,11 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     const res = await fetch('/api/auth/session');
                     if (!res.ok) {
-                        get().clearUser();
+                        // Don't clear immediately if we just logged in or have a valid local session
+                        // But return false so the caller knows the server-side check failed
+                        if (res.status === 401 && !get().isAuthenticated) {
+                            get().clearUser();
+                        }
                         return false;
                     }
                     return true;

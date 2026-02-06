@@ -5,28 +5,32 @@ const { supabase, mockDb } = require('../db');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+
+if (JWT_SECRET === 'dev-secret-change-in-production') {
+    console.warn('⚠️ WARNING: Using default JWT secret. Check .env.local loading.');
+} else {
+    console.log('✅ JWT Secret loaded successfully (first 4 chars):', JWT_SECRET.substring(0, 4) + '...');
+}
+
 const SESSION_DURATION_MS = 9 * 60 * 60 * 1000; // 9 hours
 
 /**
  * POST /api/auth/verify-pin
  * Verify PIN for protected access points
+ * Supports plain-text PIN comparison and 'NONE' for auto-bypass
  */
 router.post('/verify-pin', async (req, res) => {
     try {
         const { role, pin } = req.body;
 
-        if (!role || !pin) {
-            return res.status(400).json({ error: 'Role and PIN required' });
-        }
-
-        if (!/^\d{4}$/.test(pin)) {
-            return res.status(400).json({ error: 'PIN must be 4 digits' });
+        if (!role) {
+            return res.status(400).json({ error: 'Role required' });
         }
 
         let user = null;
 
         if (supabase) {
-            // Production: Query Supabase
+            // Production: Query Supabase users table
             const { data: users, error } = await supabase
                 .from('users')
                 .select('*')
@@ -35,17 +39,25 @@ router.post('/verify-pin', async (req, res) => {
             if (error) throw error;
 
             for (const u of users || []) {
-                if (u.pin_hash && await bcrypt.compare(pin, u.pin_hash)) {
+                // Handle 'NONE' PIN - auto-bypass (no PIN required)
+                if (u.pin === 'NONE') {
+                    user = u;
+                    break;
+                }
+                // Plain-text PIN comparison
+                if (u.pin && u.pin === pin) {
                     user = u;
                     break;
                 }
             }
         } else {
-            // Development: Use mock DB
-            // Default PIN for dev: 1234
+            // Development: Use mock DB with default PIN 1234
             const mockUser = mockDb.users.find(u => u.role === role);
-            if (mockUser && pin === '1234') {
-                user = mockUser;
+            if (mockUser) {
+                // Mock: Support 'NONE' PIN or match '1234'
+                if (mockUser.pin === 'NONE' || pin === '1234') {
+                    user = mockUser;
+                }
             }
         }
 
@@ -79,15 +91,16 @@ router.post('/verify-pin', async (req, res) => {
         }
 
         // Set HTTP-only cookie
-        res.cookie('session', token, {
+        res.cookie('cp-comms-session', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/', // Ensure cookie is available for all routes
             expires: expiresAt,
         });
 
-        // Return user data (without pin_hash)
-        const { pin_hash, ...safeUser } = user;
+        // Return user data (without pin)
+        const { pin: userPin, pin_hash, ...safeUser } = user;
         res.json({
             user: safeUser,
             expiresAt: expiresAt.toISOString(),
@@ -99,28 +112,81 @@ router.post('/verify-pin', async (req, res) => {
 });
 
 /**
+ * GET /api/auth/check-role/:role
+ * Check if a role requires PIN entry or has auto-bypass (PIN = 'NONE')
+ */
+router.get('/check-role/:role', async (req, res) => {
+    try {
+        const { role } = req.params;
+
+        if (!role) {
+            return res.status(400).json({ error: 'Role required' });
+        }
+
+        let requiresPin = true;
+
+        if (supabase) {
+            // Check Supabase users table
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('pin')
+                .eq('role', role)
+                .limit(1);
+
+            if (error) throw error;
+
+            if (users && users.length > 0) {
+                requiresPin = users[0].pin !== 'NONE';
+            }
+        } else {
+            // Mock DB: Factory and drivers have 'NONE' PIN in dev
+            const bypassRoles = ['factory', 'driver_crown', 'driver_electric'];
+            requiresPin = !bypassRoles.includes(role);
+        }
+
+        res.json({ role, requiresPin });
+    } catch (error) {
+        console.error('Check role error:', error);
+        res.status(500).json({ error: 'Failed to check role' });
+    }
+});
+
+/**
  * GET /api/auth/session
  * Validate current session
  */
 router.get('/session', async (req, res) => {
     try {
-        const token = req.cookies.session;
+        const token = req.cookies['cp-comms-session'];
 
         if (!token) {
+            console.log('[SESSION DEBUG] No token found in cookies');
             return res.status(401).json({ error: 'No session' });
         }
 
         // Verify JWT
-        const decoded = jwt.verify(token, JWT_SECRET);
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (err) {
+            console.log('[SESSION DEBUG] JWT verification failed:', err.message);
+            return res.status(401).json({ error: 'Invalid session' });
+        }
+
+        console.log('[SESSION DEBUG] Decoded token:', JSON.stringify(decoded));
 
         // Get user
         let user = null;
         if (supabase) {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('users')
                 .select('id, role, display_name, created_at')
                 .eq('id', decoded.userId)
                 .single();
+
+            if (error) {
+                console.log('[SESSION DEBUG] Supabase user lookup error:', error.message);
+            }
             user = data;
         } else {
             user = mockDb.users.find(u => u.id === decoded.userId);
@@ -131,6 +197,7 @@ router.get('/session', async (req, res) => {
         }
 
         if (!user) {
+            console.log('[SESSION DEBUG] User not found for ID:', decoded.userId);
             return res.status(401).json({ error: 'User not found' });
         }
 
@@ -139,7 +206,7 @@ router.get('/session', async (req, res) => {
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({ error: 'Session expired' });
         }
-        console.error('Session check error:', error);
+        console.error('[SESSION DEBUG] Unexpected error:', error);
         res.status(401).json({ error: 'Invalid session' });
     }
 });
@@ -149,13 +216,13 @@ router.get('/session', async (req, res) => {
  * Clear session
  */
 router.post('/logout', async (req, res) => {
-    const token = req.cookies.session;
+    const token = req.cookies['cp-comms-session'];
 
     if (token && supabase) {
         await supabase.from('sessions').delete().eq('token', token);
     }
 
-    res.clearCookie('session');
+    res.clearCookie('cp-comms-session');
     res.json({ success: true });
 });
 
@@ -166,7 +233,7 @@ router.post('/logout', async (req, res) => {
 router.post('/reset-pin', async (req, res) => {
     try {
         const { currentPin, newPin } = req.body;
-        const token = req.cookies.session;
+        const token = req.cookies['cp-comms-session'];
 
         if (!token) {
             return res.status(401).json({ error: 'Not authenticated' });

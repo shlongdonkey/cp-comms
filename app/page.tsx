@@ -3,30 +3,57 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PinInput from '@/components/auth/PinInput';
+import { useAuthStore } from '@/lib/store';
 
 const ACCESS_POINTS = [
-    { id: 'office', label: 'Office', requiresPin: true, path: '/office' },
-    { id: 'factory-office', label: 'Factory Office', requiresPin: true, path: '/factory-office' },
-    { id: 'store-office', label: 'Store Office', requiresPin: true, path: '/store-office' },
-    { id: 'factory', label: 'Factory', requiresPin: false, path: '/factory' },
-    { id: 'driver-crown', label: 'Drivers (Crown)', requiresPin: false, path: '/drivers/crown' },
-    { id: 'driver-electric', label: 'Drivers (Electric)', requiresPin: false, path: '/drivers/electric' },
+    { id: 'office', label: 'Office', path: '/office' },
+    { id: 'factory_office', label: 'Factory Office', path: '/factory-office' },
+    { id: 'store_office', label: 'Store Office', path: '/store-office' },
+    { id: 'factory', label: 'Factory', path: '/factory' },
+    { id: 'driver_crown', label: 'Drivers (Crown)', path: '/drivers/crown' },
+    { id: 'driver_electric', label: 'Drivers (Electric)', path: '/drivers/electric' },
 ];
 
 export default function HomePage() {
     const router = useRouter();
+    const { setUser } = useAuthStore();
     const [selectedAccess, setSelectedAccess] = useState<string | null>(null);
     const [showPin, setShowPin] = useState(false);
     const [pinError, setPinError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleAccessSelect = (accessPoint: typeof ACCESS_POINTS[0]) => {
-        if (accessPoint.requiresPin) {
+    const handleAccessSelect = async (accessPoint: typeof ACCESS_POINTS[0]) => {
+        setLoading(true);
+        setPinError('');
+
+        try {
+            // Check if the role requires PIN
+            const checkRes = await fetch(`/api/auth/check-role/${accessPoint.id}`);
+            const { requiresPin } = await checkRes.json();
+
+            if (!requiresPin) {
+                // Auto-login for roles with PIN = 'NONE'
+                const loginRes = await fetch('/api/auth/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: accessPoint.id }),
+                });
+
+                if (loginRes.ok) {
+                    const data = await loginRes.json();
+                    setUser(data.user, data.expiresAt);
+                    router.push(accessPoint.path);
+                    return;
+                }
+            }
+
+            // Show PIN screen for roles that require it
             setSelectedAccess(accessPoint.id);
             setShowPin(true);
-            setPinError('');
-        } else {
-            router.push(accessPoint.path);
+        } catch (error) {
+            setPinError('Connection error. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -42,6 +69,8 @@ export default function HomePage() {
             });
 
             if (res.ok) {
+                const data = await res.json();
+                setUser(data.user, data.expiresAt);
                 const accessPoint = ACCESS_POINTS.find(a => a.id === selectedAccess);
                 router.push(accessPoint?.path || '/');
             } else {
@@ -97,22 +126,11 @@ export default function HomePage() {
                                 onClick={() => handleAccessSelect(access)}
                                 className="btn btn-ghost w-full"
                                 style={{
-                                    justifyContent: 'space-between',
+                                    justifyContent: 'center',
                                     padding: 'var(--space-md)',
                                 }}
                             >
                                 <span>{access.label}</span>
-                                {access.requiresPin && (
-                                    <span style={{
-                                        fontSize: '0.75rem',
-                                        color: 'var(--text-muted)',
-                                        background: 'var(--bg-secondary)',
-                                        padding: '2px 8px',
-                                        borderRadius: 'var(--radius-sm)',
-                                    }}>
-                                        PIN
-                                    </span>
-                                )}
                             </button>
                         ))}
                     </div>

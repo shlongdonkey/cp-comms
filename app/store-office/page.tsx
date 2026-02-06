@@ -10,7 +10,7 @@ import { useTaskStore, useUIStore, useAuthStore } from '@/lib/store';
 import { connectSocket, subscribeToTasks } from '@/lib/socket';
 import type { Task, CreateTaskInput } from '@/lib/types';
 
-export default function OfficePage() {
+export default function StoreOfficePage() {
     const { user } = useAuthStore();
     const { tasks, setTasks, addTask, updateTask, removeTask, loading, setLoading } = useTaskStore();
     const { addToast, isRejectionModalOpen, selectedTaskForRejection, openRejectionModal, closeRejectionModal } = useUIStore();
@@ -110,17 +110,17 @@ export default function OfficePage() {
     };
 
     return (
-        <RouteGuard allowedRoles={['office']}>
+        <RouteGuard allowedRoles={['store_office']}>
             <main className="min-h-screen pb-2xl">
                 <header className="header sticky top-0 bg-glass z-10 p-md border-b">
                     <h1 style={{
                         fontSize: '1.5rem',
                         fontWeight: 700,
-                        background: 'linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-green) 100%)',
+                        background: 'linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-orange) 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                     }}>
-                        CP Comms • Main Office {user?.display_name && <span style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--text-secondary)' }}>• {user.display_name}</span>}
+                        CP Comms • Store Office {user?.display_name && <span style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--text-secondary)' }}>• {user.display_name}</span>}
                     </h1>
                 </header>
 
@@ -148,6 +148,7 @@ export default function OfficePage() {
                                         onPause={() => handleTaskAction(task.id, 'pause')}
                                         onResume={() => handleTaskAction(task.id, 'resume')}
                                         onComplete={() => handleTaskAction(task.id, 'complete')}
+                                        onReject={() => openRejectionModal(task)}
                                         onInfoClick={() => task.state === 'rejected' && openRejectionModal(task)}
                                         viewMode="office"
                                     />
@@ -156,12 +157,14 @@ export default function OfficePage() {
                         )}
                     </section>
                 </div>
+
                 <RejectionModal
                     isOpen={isRejectionModalOpen}
                     onClose={closeRejectionModal}
                     onConfirm={(reason) => selectedTaskForRejection && handleReject(selectedTaskForRejection.id, reason)}
                     loading={!!actionLoading}
                 />
+
                 <ToastContainer />
             </main>
         </RouteGuard>

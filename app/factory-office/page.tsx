@@ -4,16 +4,15 @@ import { useEffect, useState } from 'react';
 import RouteGuard from '@/components/auth/RouteGuard';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskForm from '@/components/tasks/TaskForm';
-import RejectionModal from '@/components/tasks/RejectionModal';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useTaskStore, useUIStore, useAuthStore } from '@/lib/store';
 import { connectSocket, subscribeToTasks } from '@/lib/socket';
 import type { Task, CreateTaskInput } from '@/lib/types';
 
-export default function OfficePage() {
+export default function FactoryOfficePage() {
     const { user } = useAuthStore();
     const { tasks, setTasks, addTask, updateTask, removeTask, loading, setLoading } = useTaskStore();
-    const { addToast, isRejectionModalOpen, selectedTaskForRejection, openRejectionModal, closeRejectionModal } = useUIStore();
+    const { addToast } = useUIStore();
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     // Fetch initial tasks
@@ -91,26 +90,8 @@ export default function OfficePage() {
         }
     };
 
-    const handleReject = async (taskId: string, reason: string) => {
-        setActionLoading(taskId);
-        try {
-            const res = await fetch(`/api/tasks/${taskId}/reject`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reason }),
-            });
-            if (!res.ok) throw new Error();
-            closeRejectionModal();
-            addToast({ type: 'success', message: 'Task rejected' });
-        } catch {
-            addToast({ type: 'error', message: 'Failed to reject task' });
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
     return (
-        <RouteGuard allowedRoles={['office']}>
+        <RouteGuard allowedRoles={['factory_office']}>
             <main className="min-h-screen pb-2xl">
                 <header className="header sticky top-0 bg-glass z-10 p-md border-b">
                     <h1 style={{
@@ -120,7 +101,7 @@ export default function OfficePage() {
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                     }}>
-                        CP Comms • Main Office {user?.display_name && <span style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--text-secondary)' }}>• {user.display_name}</span>}
+                        CP Comms • Factory Office {user?.display_name && <span style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--text-secondary)' }}>• {user.display_name}</span>}
                     </h1>
                 </header>
 
@@ -148,7 +129,6 @@ export default function OfficePage() {
                                         onPause={() => handleTaskAction(task.id, 'pause')}
                                         onResume={() => handleTaskAction(task.id, 'resume')}
                                         onComplete={() => handleTaskAction(task.id, 'complete')}
-                                        onInfoClick={() => task.state === 'rejected' && openRejectionModal(task)}
                                         viewMode="office"
                                     />
                                 ))}
@@ -156,12 +136,6 @@ export default function OfficePage() {
                         )}
                     </section>
                 </div>
-                <RejectionModal
-                    isOpen={isRejectionModalOpen}
-                    onClose={closeRejectionModal}
-                    onConfirm={(reason) => selectedTaskForRejection && handleReject(selectedTaskForRejection.id, reason)}
-                    loading={!!actionLoading}
-                />
                 <ToastContainer />
             </main>
         </RouteGuard>

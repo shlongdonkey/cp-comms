@@ -11,8 +11,10 @@ interface TaskCardProps {
     onPause?: (taskId: string) => void;
     onResume?: (taskId: string) => void;
     onComplete?: (taskId: string) => void;
+    onReject?: (taskId: string) => void;
     onInfoClick?: (task: Task) => void;
     loading?: boolean;
+    viewMode?: 'office' | 'factory' | 'driver';
 }
 
 const STATE_LABELS: Record<string, string> = {
@@ -29,8 +31,10 @@ export default function TaskCard({
     onPause,
     onResume,
     onComplete,
+    onReject,
     onInfoClick,
     loading,
+    viewMode = 'office',
 }: TaskCardProps) {
     const [isStale, setIsStale] = useState(false);
 
@@ -55,13 +59,25 @@ export default function TaskCard({
         switch (task.state) {
             case 'requested':
                 return (
-                    <button
-                        className="btn btn-success"
-                        onClick={() => onStart?.(task.id)}
-                        disabled={loading}
-                    >
-                        {loading ? <span className="spinner" /> : 'Start'}
-                    </button>
+                    <>
+                        <button
+                            className="btn btn-success"
+                            onClick={() => onStart?.(task.id)}
+                            disabled={loading}
+                        >
+                            {loading ? <span className="spinner" /> : 'Start'}
+                        </button>
+                        {viewMode === 'factory' && onReject && (
+                            <button
+                                className="btn btn-danger"
+                                onClick={() => onReject(task.id)}
+                                disabled={loading}
+                                style={{ marginLeft: 'var(--space-sm)' }}
+                            >
+                                Reject
+                            </button>
+                        )}
+                    </>
                 );
             case 'in_progress':
                 return (

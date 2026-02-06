@@ -18,7 +18,32 @@ export default function RouteGuard({ children, allowedRoles }: RouteGuardProps) 
         const validateAccess = async () => {
             const isValid = await checkSession();
 
-            if (!isValid) {
+            if (!isValid && !isAuthenticated) {
+                // Check if any of the allowed roles for this route support auto-login (PIN='NONE')
+                // We'll try the first one as a primary candidate
+                const primaryRole = allowedRoles[0];
+                try {
+                    const checkRes = await fetch(`/api/auth/check-role/${primaryRole}`);
+                    const { requiresPin } = await checkRes.json();
+
+                    if (!requiresPin) {
+                        // Auto-login attempt
+                        const loginRes = await fetch('/api/auth/verify-pin', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: primaryRole }),
+                        });
+
+                        if (loginRes.ok) {
+                            // Session created, re-validate
+                            await checkSession();
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Auto-login bypass check failed', err);
+                }
+
                 router.replace(`/?redirect=${encodeURIComponent(pathname)}`);
                 return;
             }
