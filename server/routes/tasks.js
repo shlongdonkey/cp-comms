@@ -142,6 +142,54 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * PATCH /api/tasks/:id/assign
+ * Assign task to a fleet/driver (Store Office only)
+ */
+router.patch('/:id/assign', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userId } = req.body;
+
+        if (req.user.role !== 'store_office') {
+            return res.status(403).json({ error: 'Only Store Office can assign tasks' });
+        }
+
+        const now = new Date().toISOString();
+
+        if (supabase) {
+            const { data, error } = await supabase
+                .from('tasks')
+                .update({
+                    assigned_to: userId,
+                    state_changed_at: now,
+                })
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            req.app.get('io').emit('task:updated', data);
+            res.json(data);
+        } else {
+            const taskIndex = mockDb.tasks.findIndex(t => t.id === id);
+            if (taskIndex === -1) return res.status(404).json({ error: 'Task not found' });
+
+            mockDb.tasks[taskIndex] = {
+                ...mockDb.tasks[taskIndex],
+                assigned_to: userId,
+                state_changed_at: now,
+            };
+
+            req.app.get('io').emit('task:updated', mockDb.tasks[taskIndex]);
+            res.json(mockDb.tasks[taskIndex]);
+        }
+    } catch (error) {
+        console.error('Assign task error:', error);
+        res.status(500).json({ error: 'Failed to assign task' });
+    }
+});
+
+/**
  * PATCH /api/tasks/:id/state
  * Update task state (start, pause, resume, complete)
  */

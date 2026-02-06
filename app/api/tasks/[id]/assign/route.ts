@@ -13,7 +13,7 @@ export async function PATCH(
         const sessionCookie = cookieStore.get('cp-comms-session');
         const body = await request.json();
 
-        const res = await fetch(`${BACKEND_URL}/api/tasks/${id}/state`, {
+        const res = await fetch(`${BACKEND_URL}/api/tasks/${id}/assign`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function PATCH(
         const data = await res.json();
         return NextResponse.json(data, { status: res.status });
     } catch (error: any) {
-        console.error(`[API PROXY] Task state update failed:`, error.message);
+        console.error(`[API PROXY] Task assignment failed:`, error.message);
         return NextResponse.json(
             { error: `Task service unavailable: ${error.message}` },
             { status: 503 }

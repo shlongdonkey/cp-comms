@@ -69,13 +69,9 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
     const previewDeadline = calculateDeadline(new Date(), urgency);
 
     return (
-        <form onSubmit={handleSubmit} className="card">
-            <h3 style={{ marginBottom: 'var(--space-md)', fontSize: '1.125rem' }}>
-                New Request
-            </h3>
-
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {/* Signature Input */}
-            <div style={{ marginBottom: 'var(--space-md)' }}>
+            <div>
                 <label className="label">Initials</label>
                 <div className="flex items-center gap-md">
                     <input
@@ -86,40 +82,61 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
                         className="input initials-input"
                         maxLength={2}
                         disabled={loading}
+                        style={{
+                            fontSize: '1.5rem',
+                            height: '56px',
+                            width: '80px',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid var(--glass-border)',
+                            borderRadius: '12px'
+                        }}
                     />
                     {signature.length === 2 && (
-                        <span style={{
-                            color: 'var(--accent-green)',
-                            fontWeight: 600,
-                            fontSize: '1.25rem',
+                        <div style={{
+                            padding: 'var(--space-sm) var(--space-md)',
+                            background: 'var(--grad-success)',
+                            borderRadius: '12px',
+                            color: 'var(--bg-main)',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 12px rgba(179, 226, 109, 0.2)',
+                            animation: 'slideIn 0.3s ease'
                         }}>
-                            → {formattedSignature}
-                        </span>
+                            <span style={{ fontSize: '1.1rem' }}>{formattedSignature}</span>
+                        </div>
                     )}
                 </div>
-                <p className="text-xs" style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Enter 2 letters (auto-formats to A.B)
-                </p>
             </div>
 
             {/* Description */}
-            <div style={{ marginBottom: 'var(--space-md)' }}>
-                <label className="label">Description</label>
+            <div>
+                <label className="label">What do you need?</label>
                 <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What needs to be done..."
+                    placeholder="e.g., Bring 8 pallets of core to machine 4..."
                     className="input"
                     rows={3}
                     disabled={loading}
-                    style={{ resize: 'vertical', minHeight: '80px' }}
+                    style={{
+                        resize: 'none',
+                        minHeight: '100px',
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid var(--glass-border)',
+                        padding: '12px'
+                    }}
                 />
             </div>
 
             {/* Urgency Selection */}
-            <div style={{ marginBottom: 'var(--space-md)' }}>
-                <label className="label">Urgency</label>
-                <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
+            <div>
+                <label className="label" style={{ display: 'flex', justifyContent: 'between' }}>
+                    <span>Urgency</span>
+                    <span style={{ opacity: 0.6 }}>Deadline: {previewDeadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </label>
+                <div className="grid grid-cols-2 gap-sm" style={{ marginTop: '8px' }}>
                     {URGENCY_OPTIONS.map((option) => (
                         <button
                             key={option.value}
@@ -128,28 +145,33 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
                             disabled={loading}
                             className={`btn ${urgency === option.value ? 'btn-primary' : 'btn-ghost'}`}
                             style={{
-                                flex: '1 1 auto',
-                                minWidth: '80px',
+                                padding: '12px',
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
                             }}
                         >
-                            {option.icon} {option.label}
+                            <span style={{ fontSize: '1.1rem' }}>{option.icon}</span> {option.label}
                         </button>
                     ))}
                 </div>
-                <p className="text-xs" style={{ color: 'var(--text-muted)', marginTop: '8px' }}>
-                    Deadline: {previewDeadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
             </div>
 
             {/* Error Display */}
             {error && (
-                <p style={{
-                    color: 'var(--state-rejected)',
-                    marginBottom: 'var(--space-md)',
+                <div style={{
+                    padding: 'var(--space-sm)',
+                    background: 'rgba(255, 77, 77, 0.1)',
+                    border: '1px solid rgba(255, 77, 77, 0.2)',
+                    borderRadius: '8px',
+                    color: '#FF4D4D',
                     fontSize: '0.875rem',
+                    textAlign: 'center'
                 }}>
-                    {error}
-                </p>
+                    ⚠️ {error}
+                </div>
             )}
 
             {/* Submit Button */}
@@ -157,16 +179,14 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
                 type="submit"
                 className="btn btn-primary w-full"
                 disabled={loading || signature.length !== 2 || !description.trim()}
-                style={{ padding: 'var(--space-md)' }}
+                style={{
+                    marginTop: 'var(--space-sm)',
+                    height: '56px',
+                    fontSize: '1rem',
+                    fontWeight: 600
+                }}
             >
-                {loading ? (
-                    <>
-                        <span className="spinner" />
-                        Creating...
-                    </>
-                ) : (
-                    'Create Request'
-                )}
+                {loading ? <span className="spinner" /> : 'Broadcast Request'}
             </button>
         </form>
     );
