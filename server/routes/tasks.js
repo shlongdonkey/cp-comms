@@ -137,7 +137,7 @@ router.post('/', async (req, res) => {
         }
     } catch (error) {
         console.error('Create task error:', error);
-        res.status(500).json({ error: 'Failed to create task' });
+        res.status(500).json({ error: 'Failed to create task', details: error.message });
     }
 });
 
@@ -172,7 +172,7 @@ router.patch('/:id/state', async (req, res) => {
                         original_task_id: task.id,
                         task_snapshot: task,
                         completed_at: now,
-                        delete_after: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 6 months
+                        delete_after: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(), // 6 months
                     });
 
                     // Delete from active
@@ -210,7 +210,7 @@ router.patch('/:id/state', async (req, res) => {
                     original_task_id: task.id,
                     task_snapshot: { ...task },
                     completed_at: now,
-                    delete_after: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    delete_after: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
                 });
                 mockDb.tasks.splice(taskIndex, 1);
                 req.app.get('io').emit('task:deleted', id);
