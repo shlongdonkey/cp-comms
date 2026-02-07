@@ -22,8 +22,8 @@ export default function SwipeAction({
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
 
-    const SWIPE_THRESHOLD = 60;
-    const MAX_SWIPE = 140;
+    const SWIPE_THRESHOLD = 40;
+    const MAX_SWIPE = 240;
 
     const handleTouchStart = (e: React.TouchEvent) => {
         setStartX(e.touches[0].clientX);
@@ -85,7 +85,7 @@ export default function SwipeAction({
         <div
             ref={containerRef}
             className="swipe-container"
-            style={{ position: 'relative', overflow: 'hidden' }}
+            style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px', height: '100%', background: '#000' }}
         >
             {/* Action buttons (revealed on swipe) */}
             <div
@@ -95,11 +95,16 @@ export default function SwipeAction({
                     right: 0,
                     top: 0,
                     bottom: 0,
+                    width: `${MAX_SWIPE}px`,
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-sm)',
-                    padding: '0 var(--space-md)',
-                    background: 'var(--bg-secondary)',
+                    flexDirection: 'row',
+                    alignItems: 'stretch',
+                    justifyContent: 'flex-end',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '0 8px 8px 0',
+                    zIndex: 1,
+                    overflow: 'hidden',
+                    pointerEvents: isSwiped || isDragging ? 'auto' : 'none'
                 }}
             >
                 {actions}
@@ -111,10 +116,11 @@ export default function SwipeAction({
                 className="swipe-content"
                 style={{
                     transform: `translateX(${translateX}px)`,
-                    transition: isDragging ? 'none' : 'transform 0.2s ease',
+                    transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
                     position: 'relative',
-                    background: 'var(--bg-card)',
-                    zIndex: 1,
+                    zIndex: 2,
+                    touchAction: 'pan-y',
+                    height: '100%'
                 }}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}

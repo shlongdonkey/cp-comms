@@ -61,109 +61,109 @@ export default function TaskCard({
     const renderActions = () => {
         const actions: JSX.Element[] = [];
 
-        // Special actions for Office Unallocated
-        if (viewMode === 'office' && !task.assigned_to && task.state === 'requested') {
-            actions.push(
-                <button
-                    key="crown"
-                    type="button"
-                    className="btn"
-                    onClick={(e) => {
-                        console.log('TaskCard: Crown clicked');
-                        e.stopPropagation();
-                        onAssignCrown?.(task.id);
-                    }}
-                    disabled={loading || !!actionBusy}
-                    style={{ background: '#FBBF24', color: '#000', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', minWidth: '95px' }}
-                >
-                    {actionBusy === 'crown' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: '#000' }} /> : 'Crown'}
-                </button>
-            );
-            actions.push(
-                <button
-                    key="electric"
-                    type="button"
-                    className="btn"
-                    onClick={(e) => {
-                        console.log('TaskCard: Electric clicked');
-                        e.stopPropagation();
-                        onAssignElectric?.(task.id);
-                    }}
-                    disabled={loading || !!actionBusy}
-                    style={{ background: '#10B981', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', minWidth: '95px' }}
-                >
-                    {actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: '#fff' }} /> : 'Electric'}
-                </button>
-            );
-            actions.push(
-                <button
-                    key="reject"
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={(e) => {
-                        console.log('TaskCard: Reject clicked');
-                        e.stopPropagation();
-                        onReject?.(task.id);
-                    }}
-                    disabled={loading || !!actionBusy}
-                    style={{ border: '1px solid var(--state-rejected)', color: 'var(--state-rejected)', fontSize: '0.85rem', cursor: 'pointer' }}
-                >
-                    {actionBusy === 'reject' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: 'var(--state-rejected)' }} /> : 'Reject'}
-                </button>
-            );
-            return actions;
-        }
+        // Consolidated Office Actions for all Active States
+        if (viewMode === 'office') {
+            if (task.state === 'completed' || task.state === 'rejected') return actions;
 
-        // Actions for Office - Already Assigned but still Requested
-        if (viewMode === 'office' && task.assigned_to && task.state === 'requested') {
-            const isCrown = task.assigned_to === '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b';
-            actions.push(
-                <button
-                    key="swap"
-                    type="button"
-                    className="btn"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (isCrown) onAssignElectric?.(task.id);
-                        else onAssignCrown?.(task.id);
-                    }}
-                    disabled={loading || !!actionBusy}
-                    style={{
-                        background: isCrown ? '#10B981' : '#FBBF24',
-                        color: isCrown ? '#fff' : '#000',
-                        fontWeight: 700,
-                        fontSize: '0.85rem',
-                        cursor: 'pointer',
-                        minWidth: '120px'
-                    }}
-                >
-                    {actionBusy === 'crown' || actionBusy === 'electric' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: isCrown ? '#fff' : '#000' }} /> : `Swap to ${isCrown ? 'Electric' : 'Crown'}`}
-                </button>
-            );
-            actions.push(
-                <button
-                    key="reject"
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onReject?.(task.id);
-                    }}
-                    disabled={loading || !!actionBusy}
-                    style={{ border: '1px solid var(--state-rejected)', color: 'var(--state-rejected)', fontSize: '0.85rem', cursor: 'pointer' }}
-                >
-                    {actionBusy === 'reject' ? <div className="spinner" style={{ width: '14px', height: '14px', borderColor: 'var(--state-rejected)' }} /> : 'Reject'}
-                </button>
-            );
+            const driverId = task.assigned_to || (task as any).assignedTo || (task as any).userId || (task as any).driverId;
+            const isAssigned = !!driverId && String(driverId).trim() !== '';
+
+            if (!isAssigned) {
+                // Triage actions for Unallocated (SVG Icons, Solid Backgrounds)
+                actions.push(
+                    <button
+                        key="crown"
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onAssignCrown?.(task.id); }}
+                        disabled={loading || !!actionBusy}
+                        style={{
+                            background: '#FBBF24', borderRadius: '6px', border: 'none',
+                            padding: '0 12px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '6px', cursor: 'pointer', color: '#000', minWidth: '95px'
+                        }}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="black"><path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" /></svg>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>Crown</span>
+                    </button>
+                );
+                actions.push(
+                    <button
+                        key="electric"
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onAssignElectric?.(task.id); }}
+                        disabled={loading || !!actionBusy}
+                        style={{
+                            background: '#10B981', borderRadius: '6px', border: 'none',
+                            padding: '0 12px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '6px', cursor: 'pointer', color: '#FFF', minWidth: '95px'
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M7 2V13H10V22L17 10H13L17 2H7Z" /></svg>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>Electric</span>
+                    </button>
+                );
+                actions.push(
+                    <button
+                        key="reject"
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onReject?.(task.id); }}
+                        disabled={loading || !!actionBusy}
+                        style={{
+                            background: 'transparent', borderRadius: '6px', border: '1px solid var(--state-rejected)',
+                            padding: '0 12px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: '8px', cursor: 'pointer', color: 'var(--state-rejected)', minWidth: '100%'
+                        }}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
+                        <span style={{ fontSize: '1rem', fontWeight: 700 }}>Reject</span>
+                    </button>
+                );
+            } else {
+                // Management actions for Allocated (Full-height Slab buttons for Swipe)
+                const isCrown = driverId === '61a7b659-a95f-4f2b-a6c0-ea4218f99b5b';
+                actions.push(
+                    <button
+                        key="swap"
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); if (isCrown) onAssignElectric?.(task.id); else onAssignCrown?.(task.id); }}
+                        disabled={loading || !!actionBusy}
+                        style={{
+                            flex: 1, height: '100%', minWidth: '120px',
+                            background: isCrown ? '#10B981' : '#FBBF24', border: 'none',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            gap: '4px', cursor: 'pointer', color: isCrown ? '#FFF' : '#000', margin: 0
+                        }}
+                    >
+                        {isCrown ? (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M7 2V13H10V22L17 10H13L17 2H7Z" /></svg>
+                        ) : (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="black"><path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" /></svg>
+                        )}
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>SWAP</span>
+                    </button>
+                );
+                actions.push(
+                    <button
+                        key="reject"
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onReject?.(task.id); }}
+                        disabled={loading || !!actionBusy}
+                        style={{
+                            flex: 1, height: '100%', minWidth: '120px',
+                            background: '#EF4444', border: 'none',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            gap: '4px', cursor: 'pointer', color: 'white', margin: 0
+                        }}
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>REJECT</span>
+                    </button>
+                );
+            }
             return actions;
         }
 
         // Only show state change buttons (Start, Pause, Resume, Complete) if NOT in office mode
-        if (viewMode === 'office') {
-            // Office can ONLY see Info or Re-assign/Reject for unstarted tasks. 
-            // Once started, they just watch.
-            return actions;
-        }
 
         if (task.state === 'requested') {
             actions.push(
@@ -203,92 +203,80 @@ export default function TaskCard({
 
     // ULTIMATE Layout for Store Office
     if (viewMode === 'office') {
+        const driverId = task.assigned_to || (task as any).assignedTo || (task as any).userId || (task as any).driverId;
+        const isUnallocated = !driverId || driverId === '';
+
+        const mainCard = (
+            <div style={{
+                flex: 1,
+                background: '#0f172a', // Solid dark navy color to mask swiped actions
+                borderRadius: '8px',
+                border: '1px solid var(--glass-border)',
+                display: 'flex',
+                minHeight: '84px',
+                height: 'auto',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-sm)'
+            }}>
+                {/* Left Part: Category & Description */}
+                <div style={{ flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary-blue-light)', marginBottom: '4px' }}>
+                        {task.category?.toUpperCase() || 'TASK'}
+                    </div>
+                    <div style={{ fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 400, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                        {task.description}
+                    </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ width: '1px', background: 'var(--glass-border)', height: 'auto', alignSelf: 'stretch', margin: '10px 0' }} />
+
+                {/* Right Part: Status & Meta */}
+                <div style={{ width: '140px', padding: '10px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>
+                        {STATE_LABELS[task.state]}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '1rem', alignItems: 'center', marginTop: 'auto' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--primary-blue-light)', opacity: 0.8 }}>{formatInitials(task.signature)}</span>
+                        <span style={{ fontWeight: 900, color: 'var(--text-primary)' }}>{task.urgency === 'now' ? 'Now' : task.urgency}</span>
+                    </div>
+                </div>
+            </div>
+        );
+
+        if (isUnallocated && task.state === 'requested') {
+            const triageActions = renderActions();
+            return (
+                <div className="flex items-center gap-md w-full" style={{ marginBottom: 'var(--space-xs)' }}>
+                    <div style={{ minWidth: '75px', color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500, textAlign: 'center' }}>
+                        {creationTime}
+                    </div>
+                    {mainCard}
+                    {/* Direct cluster for Unallocated Triage - Reverted back to high-fidelity horizontal */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '190px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            {triageActions.find(a => a.key === 'crown')}
+                            {triageActions.find(a => a.key === 'electric')}
+                        </div>
+                        {triageActions.find(a => a.key === 'reject')}
+                    </div>
+                </div>
+            );
+        }
+
+        // Allocated: Cleaner view, only the Card swipes (not the time)
         return (
-            <div
-                className={`glass-panel task-card--${task.state.replace('_', '-')} ${isStale ? 'task-card--stale' : ''}`}
-                style={{
-                    padding: 'var(--space-md)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 'var(--space-sm)',
-                    minHeight: '130px',
-                    borderLeft: `6px solid ${isOverdue ? 'var(--state-rejected)' : (task.state === 'requested' ? 'var(--primary-blue-light)' : `var(--state-${task.state.replace('_', '-')})`)}`,
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-sm)'
-                }}
-            >
-                {/* Header Row: Time, Initials, Category, State */}
-                <div className="flex justify-between items-start" style={{ position: 'relative', zIndex: 1 }}>
-                    <div className="flex flex-col">
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 700 }}>
-                            {creationTime}
-                        </span>
-                        <div className="flex items-center gap-xs" style={{ marginTop: '2px' }}>
-                            <span style={{ fontWeight: 800, color: 'var(--primary-blue-light)', fontSize: '0.95rem' }}>{formatInitials(task.signature)}</span>
-                            <span style={{ fontSize: '0.6rem', color: 'var(--accent-green)', fontWeight: 700, background: 'rgba(179, 226, 109, 0.1)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(179, 226, 109, 0.2)' }}>
-                                {task.category?.toUpperCase() || 'TASK'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col items-end">
-                        <span style={{
-                            fontSize: '0.65rem',
-                            fontWeight: 700,
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            background: isOverdue ? 'rgba(255, 77, 77, 0.2)' : 'rgba(255,255,255,0.05)',
-                            color: isOverdue ? 'var(--state-rejected)' : (task.state === 'requested' ? 'var(--primary-blue-light)' : 'var(--text-secondary)'),
-                            border: `1px solid ${isOverdue ? 'rgba(255, 77, 77, 0.3)' : 'var(--glass-border)'}`
-                        }}>
-                            {STATE_LABELS[task.state]}
-                        </span>
-                        <div className="flex gap-xs mt-xs">
-                            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{task.urgency.toUpperCase()}</span>
-                            {isOverdue && <span style={{ fontSize: '0.6rem', color: 'var(--state-rejected)', fontWeight: 800 }}>OVERDUE</span>}
-                        </div>
-                    </div>
+            <div className="flex items-center gap-md w-full" style={{ marginBottom: 'var(--space-xs)' }}>
+                {/* Fixed Time Column */}
+                <div style={{ minWidth: '75px', color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 500, textAlign: 'center' }}>
+                    {creationTime}
                 </div>
-
-                {/* Description - The Main Content (Wrapping) */}
-                <div style={{
-                    fontSize: '1rem',
-                    color: 'var(--text-primary)',
-                    fontWeight: 500,
-                    lineHeight: 1.4,
-                    flex: 1,
-                    position: 'relative',
-                    zIndex: 1,
-                    wordBreak: 'break-word',
-                    padding: 'var(--space-xs) 0'
-                }}>
-                    {task.description}
+                {/* Swipable Card */}
+                <div style={{ flex: 1 }}>
+                    <SwipeAction actions={renderActions()}>
+                        {mainCard}
+                    </SwipeAction>
                 </div>
-
-                {/* Footer Row: Actions */}
-                <div className="flex justify-end gap-sm" style={{ marginTop: 'auto', paddingTop: 'var(--space-xs)', position: 'relative', zIndex: 2 }}>
-                    {renderActions()}
-                    {task.state === 'rejected' && (
-                        <button className="info-btn" onClick={() => onInfoClick?.(task)} style={{ scale: '0.9' }}>i</button>
-                    )}
-                </div>
-
-                {/* Pulse for active tasks */}
-                {task.state === 'in_progress' && (
-                    <div style={{
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(180deg, rgba(179, 226, 109, 0.03) 0%, transparent 100%)',
-                        zIndex: 0,
-                        pointerEvents: 'none'
-                    }} />
-                )}
             </div>
         );
     }

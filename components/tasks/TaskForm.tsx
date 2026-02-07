@@ -141,8 +141,8 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                     <label className="label" style={{ margin: 0 }}>What do you need?</label>
-                    <span style={{ fontSize: '0.75rem', opacity: 0.6, color: description.length >= 150 ? 'var(--state-rejected)' : 'inherit' }}>
-                        {description.length}/150
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6, color: description.length >= 120 ? 'var(--state-rejected)' : 'inherit' }}>
+                        {description.length}/120
                     </span>
                 </div>
                 <textarea
@@ -151,7 +151,7 @@ export default function TaskForm({ onSubmit, loading }: TaskFormProps) {
                     placeholder="e.g., Bring 8 pallets of core to machine 4..."
                     className="input"
                     rows={3}
-                    maxLength={150}
+                    maxLength={120}
                     disabled={loading}
                     style={{
                         resize: 'none',
